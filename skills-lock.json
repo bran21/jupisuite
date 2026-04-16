@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "integrating-jupiter": {
+      "source": "jup-ag/agent-skills",
+      "sourceType": "github",
+      "computedHash": "c13bfbb41e6d7d1e5ad5e43179c6043b29dfa96594d2b483bc31f8d182e597fe"
+    }
+  }
+}
