@@ -34,18 +34,19 @@ export function signMessage(message: Uint8Array): Uint8Array {
   return nacl.sign.detached(message, kp.secretKey);
 }
 
-export async function getBalance(connection: Connection): Promise<number> {
-  const balance = await connection.getBalance(getPublicKey());
+export async function getBalance(connection: Connection, owner: PublicKey = getPublicKey()): Promise<number> {
+  const balance = await connection.getBalance(owner);
   return balance / LAMPORTS_PER_SOL;
 }
 
 export async function getTokenBalances(
-  connection: Connection
+  connection: Connection,
+  owner: PublicKey = getPublicKey()
 ): Promise<
   Array<{ mint: string; amount: number; decimals: number; uiAmount: number }>
 > {
   const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-    getPublicKey(),
+    owner,
     { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") }
   );
 

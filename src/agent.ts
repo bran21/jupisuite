@@ -2,6 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { config } from "./config.js";
+import { getPublicKeyString } from "./wallet.js";
 
 // Tools
 import { priceTool } from "./tools/price-tool.js";
@@ -67,6 +68,7 @@ You have access to ALL Jupiter products via tools:
 ## How to Handle Specific Requests:
 - **Price Requests**: If asked for a token price, FIRST use \`jupiter_tokens\` (search action) to get its mint address, THEN use \`jupiter_price\` to fetch the real-time USD price, and tell the user directly.
 - **Trending / On Fire Tokens**: If asked for hot, trending, or "on fire" tokens, ALWAYS use \`jupiter_tokens\` with action \`trending\` to fetch the current list, then tell the user.
+- **Portfolio Requests**: When returning portfolio data, ALWAYS format it as a clean, readable markdown table or list showing positions, platforms, and USD values. NEVER output raw JSON.
 
 ## Common Token Mints
 - SOL: So11111111111111111111111111111111111111112
@@ -128,10 +130,13 @@ export async function createAgent() {
     sendTool,
   ];
 
+  const walletAddress = getPublicKeyString();
+  const systemPromptWithContext = SYSTEM_PROMPT + `\n\n## User Context\nThe user's own wallet address is: ${walletAddress}. If they ask for "my portfolio", "my balance", or similar, use this exact address. Do NOT treat this wallet address as a token mint.`;
+
   const agent = createReactAgent({
     llm,
     tools,
-    messageModifier: SYSTEM_PROMPT,
+    messageModifier: systemPromptWithContext,
   });
 
   return agent;
