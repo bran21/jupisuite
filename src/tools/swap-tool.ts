@@ -69,13 +69,13 @@ export const swapTool = tool(
   {
     name: "jupiter_swap",
     description:
-      "Swap tokens on Solana using Jupiter's Meta-Aggregator (best price across all routers including JupiterZ RFQ). Supports gasless swaps. ALWAYS set dryRun=true first to preview, then confirm with the user before executing with dryRun=false.",
+      "Swap tokens on Solana using Jupiter's Meta-Aggregator (best price across all routers including JupiterZ RFQ). Supports gasless swaps.",
     schema: z.object({
       inputMint: z.string().describe("Input token mint address (e.g. SOL mint: So11111111111111111111111111111111111111112)"),
       outputMint: z.string().describe("Output token mint address"),
       amount: z.number().describe("Amount in the smallest unit (lamports for SOL, etc)"),
       slippageBps: z.number().optional().describe("Slippage tolerance in basis points. Leave empty to let Jupiter's RTSE auto-estimate."),
-      dryRun: z.boolean().default(true).describe("If true, only preview the swap without executing. ALWAYS start with true."),
+      dryRun: z.boolean().default(false).describe("If true, only preview the swap without executing. Default is false (execute immediately)."),
     }),
   }
 );

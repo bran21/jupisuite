@@ -48,7 +48,10 @@ async function main() {
   console.log(`🔑 Wallet: ${pubkey}`);
   console.log(`💰 Balance: ${balanceStr}`);
   console.log(`🌐 Network: Solana Mainnet`);
-  console.log(`🤖 LLM: Claude Sonnet 4.5`);
+  const llmLabel = config.aiProvider === "openrouter" ? "OpenRouter (anthropic/claude-sonnet-4)"
+    : config.aiProvider === "anthropic" ? "Claude (Anthropic)"
+    : "Qwen (Alibaba)";
+  console.log(`🤖 LLM: ${llmLabel}`);
   console.log(`\nType your commands in natural language. Type "exit" to quit.\n`);
 
   // Create agent

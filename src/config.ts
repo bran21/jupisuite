@@ -16,7 +16,10 @@ export const config = {
   birdeyeApiKey: process.env.BIRDEYE_API_KEY || "",
 
   // LLM
+  aiProvider: process.env.AI_PROVIDER || "alibaba", // 'alibaba', 'anthropic', or 'openrouter'
+  alibabaApiKey: process.env.ALIBABA_API_KEY || "",
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || "",
+  openRouterApiKey: process.env.OPENROUTER_API_KEY || "",
 
   // Solana RPC
   solanaRpcUrl:
@@ -42,6 +45,10 @@ export function validateConfig(): string[] {
   const missing: string[] = [];
   if (!config.walletPrivateKey) missing.push("WALLET_PRIVATE_KEY");
   if (!config.jupiterApiKey) missing.push("JUPITER_API_KEY");
-  if (!config.anthropicApiKey) missing.push("ANTHROPIC_API_KEY");
+  
+  if (config.aiProvider === "alibaba" && !config.alibabaApiKey) missing.push("ALIBABA_API_KEY");
+  if (config.aiProvider === "anthropic" && !config.anthropicApiKey) missing.push("ANTHROPIC_API_KEY");
+  if (config.aiProvider === "openrouter" && !config.openRouterApiKey) missing.push("OPENROUTER_API_KEY");
+  
   return missing;
 }

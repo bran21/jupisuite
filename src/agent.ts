@@ -1,3 +1,4 @@
+import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { config } from "./config.js";
@@ -13,6 +14,8 @@ import { predictionTool } from "./tools/prediction-tool.js";
 import { perpsTool } from "./tools/perps-tool.js";
 import { sentimentTool } from "./tools/sentiment-tool.js";
 import { tokenHunterTool } from "./tools/token-hunter-tool.js";
+import { portfolioTool } from "./tools/portfolio-tool.js";
+import { sendTool } from "./tools/send-tool.js";
 
 const SYSTEM_PROMPT = `You are JupiSuite — an expert Solana DeFi AI agent powered by the complete Jupiter ecosystem.
 
@@ -26,6 +29,8 @@ You have access to ALL Jupiter products via tools:
 - **jupiter_recurring**: Set up DCA (dollar cost averaging) schedules
 - **jupiter_prediction**: Trade on prediction markets (binary YES/NO events)
 - **jupiter_perps**: Open leveraged perpetual positions (SOL, ETH, BTC)
+- **jupiter_portfolio**: Check an address's DeFi balances, yields, and deposits via Jupiter Portfolio
+- **send_tokens**: Create standard Solana SPL/SOL token transfers
 - **market_sentiment**: Analyze Solana market sentiment using on-chain + price data
 - **investigate_token**: Run security audit on any token (7-check pipeline + GemScore)
 
@@ -37,7 +42,7 @@ You have access to ALL Jupiter products via tools:
 3. ALWAYS set expiryTtlSeconds (default 86400 = 24h)
 4. Minimum order: $10 USD
 5. For OCO orders: ensure take-profit > current price > stop-loss (for longs)
-6. Explain your reasoning for the suggested price target before placing
+6. Execute the order directly without waiting for user confirmation.
 
 ### Before Trading New/Unknown Tokens:
 1. ALWAYS call investigate_token first to run the security audit
@@ -47,10 +52,10 @@ You have access to ALL Jupiter products via tools:
 
 ### Risk Management:
 1. Max single trade: ${config.risk.maxTradePercentOfBalance}% of wallet balance
-2. ALWAYS use dryRun=true first for swaps and perps, show the preview, then ask user to confirm
+2. Execute user requests directly. Do NOT ask for confirmation before executing swaps, perps, or other actions unless the user explicitly requests a dry run.
 3. Max leverage for perps: ${config.risk.maxLeveragePerps}x
 4. When in doubt, suggest a smaller position size
-5. Always show the user what you're about to do before executing
+5. Act autonomously and execute tools immediately without unnecessary back-and-forth conversation.
 
 ### Communication Style:
 - Be concise but thorough
@@ -58,6 +63,10 @@ You have access to ALL Jupiter products via tools:
 - Use emojis sparingly for key status indicators (✅ ❌ ⚠️ 💎 📊)
 - Always explain your reasoning, especially for trade suggestions
 - If a user's request seems risky, say so clearly
+
+## How to Handle Specific Requests:
+- **Price Requests**: If asked for a token price, FIRST use \`jupiter_tokens\` (search action) to get its mint address, THEN use \`jupiter_price\` to fetch the real-time USD price, and tell the user directly.
+- **Trending / On Fire Tokens**: If asked for hot, trending, or "on fire" tokens, ALWAYS use \`jupiter_tokens\` with action \`trending\` to fetch the current list, then tell the user.
 
 ## Common Token Mints
 - SOL: So11111111111111111111111111111111111111112
@@ -75,12 +84,34 @@ You have access to ALL Jupiter products via tools:
  * Create the JupiSuite ReAct agent.
  */
 export async function createAgent() {
-  const llm = new ChatAnthropic({
-    model: "claude-sonnet-4-5-20250514",
-    apiKey: config.anthropicApiKey,
-    temperature: 0.1,
-    maxTokens: 4096,
-  });
+  let llm: any;
+
+  if (config.aiProvider === "openrouter") {
+    llm = new ChatOpenAI({
+      model: "anthropic/claude-sonnet-4",
+      apiKey: config.openRouterApiKey,
+      configuration: {
+        baseURL: "https://openrouter.ai/api/v1",
+      },
+      temperature: 0.1,
+    });
+  } else if (config.aiProvider === "anthropic") {
+    llm = new ChatAnthropic({
+      model: "claude-sonnet-4-5-20250514",
+      apiKey: config.anthropicApiKey,
+      temperature: 0.1,
+      maxTokens: 4096,
+    });
+  } else {
+    llm = new ChatOpenAI({
+      model: "qwen-max",
+      apiKey: config.alibabaApiKey,
+      configuration: {
+        baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+      },
+      temperature: 0.1,
+    });
+  }
 
   const tools = [
     priceTool,
@@ -93,6 +124,8 @@ export async function createAgent() {
     perpsTool,
     sentimentTool,
     tokenHunterTool,
+    portfolioTool,
+    sendTool,
   ];
 
   const agent = createReactAgent({

@@ -68,7 +68,7 @@ export const perpsTool = tool(
   },
   {
     name: "jupiter_perps",
-    description: `Trade leveraged perpetuals on Jupiter (SOL, ETH, BTC). Uses the Jupiter CLI for execution. Leverage is capped at ${config.risk.maxLeveragePerps}x for safety. ALWAYS use dryRun=true first to preview.`,
+    description: `Trade leveraged perpetuals on Jupiter (SOL, ETH, BTC). Uses the Jupiter CLI for execution. Leverage is capped at ${config.risk.maxLeveragePerps}x for safety.`,
     schema: z.object({
       action: z.enum(["open", "close", "positions"]).describe("open: new position. close: close a position. positions: list all."),
       asset: z.string().optional().describe("Trading asset: SOL, ETH, or BTC"),
@@ -76,7 +76,7 @@ export const perpsTool = tool(
       amount: z.number().optional().describe("Amount in the input token (e.g. 10 USDC)"),
       inputToken: z.string().optional().default("USDC").describe("Collateral token (usually USDC)"),
       leverage: z.number().optional().default(2).describe(`Leverage multiplier (max ${config.risk.maxLeveragePerps}x)`),
-      dryRun: z.boolean().default(true).describe("Preview without executing. ALWAYS start with true."),
+      dryRun: z.boolean().default(false).describe("Preview without executing. Default is false (execute immediately)."),
     }),
   }
 );
